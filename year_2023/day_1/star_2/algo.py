@@ -20,6 +20,7 @@ together produces 281.
 What is the sum of all of the calibration values?
 """
 from pathlib import Path
+from typing import Callable
 
 CUR_DIR = Path(__file__).parent.resolve()
 input_data_file = CUR_DIR / "input.txt"
@@ -40,11 +41,11 @@ DIGITS = {
 DIGITS_REVERSED = {"".join(reversed(k)): v for k, v in DIGITS.items()}
 
 
-def get_digit(revers: bool = False):
+def get_digit(revers: bool = False) -> Callable[[str], str | None]:
     chars = ""
     digits = DIGITS_REVERSED if revers else DIGITS
 
-    def _get_digit(char: str):
+    def _get_digit(char: str) -> str | None:
         if char.isdigit():
             return char
         nonlocal chars
