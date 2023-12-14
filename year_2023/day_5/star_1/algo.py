@@ -131,7 +131,7 @@ END_NAME = "location"
 @dataclass
 class Data:
     seeds: list[int]
-    mapping: dict[tuple[str, str], list[list[int, int, int]]]
+    mapping: dict[tuple[str, str], list[list[int]]]
 
 
 def parse(data: str) -> Data:
