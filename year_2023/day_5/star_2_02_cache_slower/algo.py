@@ -55,7 +55,7 @@ def get_seed_location(data: Data, highway: list[str], seed: int) -> int:
 
         pairs.append((next_name, value))
 
-        mappings = data.mapping[pair]
+        mappings = data.mappings[pair]
         index = bisect_right(mappings, value, key=lambda el: el[0])
 
         if index != 0:
@@ -71,7 +71,7 @@ def get_seed_location(data: Data, highway: list[str], seed: int) -> int:
 
 def algo(text: str) -> int:
     data = parse(text)
-    highway = get_highway(data.mapping.keys())
+    highway = get_highway(data.mappings.keys())
 
     locations = []
     it = iter(data.seeds)

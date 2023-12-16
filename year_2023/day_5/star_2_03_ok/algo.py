@@ -55,37 +55,70 @@ def batched(iterable: Iterable[Any], n: int = 2) -> Iterable[list[Any]]:
 
 
 def get_next_solutions(
-    points: list[list[int]], mapping: list[list[int]]
+    points: list[list[int]], mappings: list[list[int]]
 ) -> list[list[int]]:
-    i = 0
     results = []
+    i_mapping = 0
+
+    # fmt: off
     for point in points:
-        if point[0] < mapping[i][0]:
-            if point[1] < mapping[i][0]:
-                results.append(point)
-            
+        while i_mapping < len(mappings):
+            if point[0] < mappings[i_mapping][0]:
+                if point[1] < mappings[i_mapping][0]:
+                    results.append(point)
+                    break
+                else:
+                    results.append([point[0], mappings[i_mapping][0] - 1])
+                    point = [mappings[i_mapping][0], point[1]]
+                    # i_mapping += 1
+            elif point[0] <= mappings[i_mapping][1]:
+                if point[1] <= mappings[i_mapping][1]:
+                    results.append([
+                        point[0] - mappings[i_mapping][0] + mappings[i_mapping][2],
+                        point[1] - mappings[i_mapping][0] + mappings[i_mapping][2]
+                    ])
+                    break
+                else:
+                    results.append([
+                        point[0] - mappings[i_mapping][0] + mappings[i_mapping][2],
+                        mappings[i_mapping][1] - mappings[i_mapping][0] + mappings[i_mapping][2]
+                    ])
+                    point = [mappings[i_mapping][1] + 1, point[1]]
+                    # i_mapping += 1
+            else:
+                i_mapping += 1
+
+        if i_mapping == len(mappings):
+            results.append(point)
+    # fmt: on
 
     return results
 
 
 def algo(text: str) -> int:
     data = parse(text)
-    highway = get_highway(data.mapping.keys())
+
+    for mappings in data.mappings.values():
+        for mapping in mappings:
+            mapping[:] = [mapping[0], mapping[0] + mapping[2] - 1, mapping[1]]
+
+    highway = get_highway(data.mappings.keys())
 
     def _sort(array):
         array.sort(key=lambda el: el[0])
         return array
 
-    solutions: list[list[int]] = _sort(
-        [[x, x + length] for x, length in batched(data.seeds)]
-    )
+    solutions: list[list[int]] = [
+        [x, x + length - 1] for x, length in batched(data.seeds)
+    ]
 
     for pair in pairwise(highway):
-        print(pair)
-        solutions = get_next_solutions(solutions, _sort(data.mapping[pair]))
+        # print(pair)
+        solutions = get_next_solutions(_sort(solutions), _sort(data.mappings[pair]))
 
-    # return min(locations)
-    return 0
+    _sort(solutions)
+
+    return solutions[0][0]
 
 
 def main():

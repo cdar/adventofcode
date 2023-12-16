@@ -131,7 +131,7 @@ END_NAME = "location"
 @dataclass
 class Data:
     seeds: list[int]
-    mapping: dict[tuple[str, str], list[list[int]]]
+    mappings: dict[tuple[str, str], list[list[int]]]
 
 
 def parse(data: str) -> Data:
@@ -182,7 +182,7 @@ def get_seed_location(data: Data, highway: list[str], seed: int) -> int:
     for next_name in highway[1:]:
         pair = (pair[1], next_name)
 
-        mappings = data.mapping[pair]
+        mappings = data.mappings[pair]
         index = bisect_left(mappings, value, key=lambda el: el[0])
 
         if index != 0:
@@ -195,7 +195,7 @@ def get_seed_location(data: Data, highway: list[str], seed: int) -> int:
 
 def algo(text: str) -> int:
     data = parse(text)
-    highway = get_highway(data.mapping.keys())
+    highway = get_highway(data.mappings.keys())
 
     locations = [get_seed_location(data, highway, seed) for seed in data.seeds]
 
