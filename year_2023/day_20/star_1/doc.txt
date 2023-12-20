@@ -1,0 +1,23 @@
+pulse - high or low
+each module sends the same pulse to each in its list of destination modules
+
+types of modules:
+
+flip-flop (prefix %) - can be on and off, off by default
+    if high - ignore
+    if low - toggle state
+        on to off - send low
+        off to on - send high
+
+conjunction (prefix &) - remember last signal from each input, default - low
+    update memory then
+    if high for all - send low
+    else send high
+
+single broadcast (broadcaster)
+    outputs = input
+
+aplty - a single button, when pressed send low to broadcaster
+
+- can push the button only after all signals are processed
+- order is important
