@@ -9,7 +9,8 @@ flip-flop (prefix %) - can be on and off, off by default
         on to off - send low
         off to on - send high
 
-conjunction (prefix &) - remember last signal from each input, default - low
+conjunction (prefix &) - remember the type of the most recent pulse received from each of their connected input modules
+    they initially default to remembering a low pulse for each input.
     update memory then
     if high for all - send low
     else send high

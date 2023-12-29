@@ -149,15 +149,19 @@ fully handled after each push of the button. What do you get if you multiply the
 number of low pulses sent by the total number of high pulses sent?
 """
 import operator
+from collections import deque
+from dataclasses import dataclass
+from enum import Enum, auto
 from pathlib import Path
+from typing import Any
 
 CUR_DIR = Path(__file__).parent.resolve()
 input_data_file = CUR_DIR / "input.txt"
 
-Instructions = list[tuple[str, list[str]]]
+ParsedInstructions = list[tuple[str, list[str]]]
 
 
-def parse(text: str) -> Instructions:
+def parse(text: str) -> ParsedInstructions:
     instructions = []
     for line in text.splitlines():
         left, rights = line.split("->")
@@ -168,24 +172,113 @@ def parse(text: str) -> Instructions:
     return instructions
 
 
+class InstructionType(str, Enum):
+    aplty = "aplty"
+    broadcaster = "broadcaster"
+    flip_flop = "%"
+    conjunction = "&"
+
+
+@dataclass
+class Instruction:
+    type: InstructionType
+    destination_modules: list[str]
+    value: Any = None
+    signal: bool | None = None
+
+
+def build_instructions(parsed_instructions: ParsedInstructions) -> dict[str, Instruction]:
+    instructions: dict[str, Instruction] = {}
+
+    for left, rights in parsed_instructions:
+        module_char = None
+        if left[0] in [InstructionType.flip_flop.value, InstructionType.conjunction.value]:
+            module_char = left[0]
+            left = left[1:]
+        signal = None
+        value = False
+
+        match [module_char, left]:
+            case [InstructionType.flip_flop.value, name]:
+                type_ = InstructionType.flip_flop
+            case [InstructionType.conjunction.value, name]:
+                type_ = InstructionType.conjunction
+                value = {}
+            case [None, InstructionType.broadcaster.value as name]:
+                type_ = InstructionType.broadcaster
+                signal = False
+            case _:
+                raise ValueError(f"Unknown instruction type: '{module_char}', '{left}'")
+
+        assert name not in instructions
+        instructions[name] = Instruction(type_, rights, value, signal)
+
+    for name, in_instruction in instructions.items():
+        for out_name in in_instruction.destination_modules:
+            out_instruction = instructions[out_name]
+            if out_instruction.type == InstructionType.conjunction:
+                out_instruction.value[name] = False
+
+    return instructions
+
+
 def algo(text: str) -> tuple[int, int]:
+    # signal: False - low, True - high
     instructions = parse(text)
+    instructions = build_instructions(instructions)
+
+    def _update_definition(in_signal: bool, out_names: list[str]):
+        for out_name in out_names:
+            definition = instructions[out_name]
+            definition.signal = in_signal
+            if definition.type == InstructionType.conjunction:
+                definition.value.append(in_signal)
 
     different_runs = {}
 
     while True:
-        for left, right in instructions:
-            module_type = None
-            if left[0] in "%&":
-                module_type = left[0]
-                left = left[1:]
+        visited = set()
+        run_id = []
+        queue = deque([InstructionType.broadcaster.value])
 
-            match [module_type, left]:
-                case ["%", name]:
-                case ["&", name]:
-                case [None, "broadcaster"]:
+        while True:
+            name = queue.popleft()
+            definition = instructions[name]
+
+            if definition.signal is None:
+                raise ValueError(f"No signal defined for {name}")
+
+            if name in visited:
+                continue
+            visited.add(name)
+
+            match definition.type:
+                case InstructionType.broadcaster:
+                    queue.extend(definition.destination_modules)
+                    _update_definition(False, definition.destination_modules)
+
+                case InstructionType.flip_flop:
+                    assert definition.value is not None
+                    if definition.signal is True:
+                        continue
+                    definition.value = not definition.value
+                    output_signal = definition.value
+
+                    _update_definition(output_signal, definition.destination_modules)
+
+                case InstructionType.conjunction:
+                    assert definition.value is not None
+                    assert isinstance(definition.value, list)
+
+                    output_signal = not all(definition.value)
+                    _update_definition(output_signal, definition.destination_modules)
+
+                    definition.value = []
+
                 case _:
-                    raise ValueError(f"Unknown left: '{module_type}', '{left}'")
+                    raise ValueError(f"Unknown instruction type: '{definition.type}")
+
+            definition.signal = None
 
     return 0, 0
 
