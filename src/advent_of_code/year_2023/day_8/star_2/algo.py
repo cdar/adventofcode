@@ -95,6 +95,64 @@ def algo(input_data: InputData) -> int:
     return steps_count
 
 
+@dataclass
+class GraphNode:
+    name: str
+    left: "GraphNode"
+    right: "GraphNode"
+
+
+def _build_graph(nodes: dict[str, tuple[str, str]]) -> GraphNode:
+    _LEFT = 0
+    _RIGHT = 1
+
+    graph_nodes: dict[str, GraphNode] = {}
+
+    for node_name in nodes.keys():
+        graph_nodes[node_name] = GraphNode(node_name, None, None)
+
+    for node_name, left_right_tuple in nodes.items():
+        node = graph_nodes[node_name]
+        node.left = graph_nodes[left_right_tuple[_LEFT]]
+        node.right = graph_nodes[left_right_tuple[_RIGHT]]
+
+    return graph_nodes
+
+
+def alog_test_network_perf(input_data: InputData) -> int:
+    graph_nodes: dict[str, GraphNode] = _build_graph(input_data.nodes)
+
+    current_nodes: list[GraphNode] = [
+        graph_nodes[key] for key in input_data.nodes.keys() if key.endswith("A")
+    ]
+    steps_count = 0
+    current_instruction = 0
+    instructions_loop = 0
+
+    pbar = tqdm()
+
+    while any(not node.name.endswith("Z") for node in current_nodes):
+        if current_instruction >= len(input_data.instructions):
+            instructions_loop += 1
+            current_instruction = 0
+            pbar.update(1)
+
+        for i_current_node in range(len(current_nodes)):
+            node = current_nodes[i_current_node]
+            current_nodes[i_current_node] = (
+                node.left
+                if input_data.instructions[current_instruction] == "L"
+                else node.right
+            )
+
+        current_instruction += 1
+        steps_count += 1
+
+    pbar.close()
+
+    return steps_count
+
+
 def algo2(input_data: InputData) -> int:
     current_nodes = [key for key in input_data.nodes.keys() if key.endswith("A")]
     steps_count = 0
