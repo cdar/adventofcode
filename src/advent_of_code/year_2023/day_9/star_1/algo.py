@@ -142,7 +142,7 @@ def main():
     print("second... ")
     text = input_data_file.read_text()
     print(start(text))
-    # print("expected: 19241")
+    print("expected: 1641934234")
 
 
 if __name__ == "__main__":

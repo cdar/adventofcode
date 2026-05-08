@@ -22,10 +22,22 @@ Analyze your OASIS report again, this time extrapolating the previous value for 
 is the sum of these extrapolated values?
 """
 
+# 13:  2 -  2 =  0
+# 12:  0 - -2 =  2 ->
+# 11:  3 -  5 = -2
+# 10: 10 -  5 =  5
+
+
+# 13: 0
+# 12: 2  -  0 =  2
+# 11: 0  -  2 = -2
+# 10: 3  - -2 =  5
+#  9: 10 -  5 =  5
+
 from pathlib import Path
 
 CUR_DIR = Path(__file__).parent.resolve()
-input_data_file = CUR_DIR / "input.txt"
+input_data_file = CUR_DIR / "../star_1/input.txt"
 
 
 def parse(text: str) -> list[list[int]]:
@@ -55,7 +67,7 @@ def _calc_line(sequence: list[int]) -> int:
 
     last_number = 0
     for step in steps[::-1]:
-        last_number += step[-1]
+        last_number = step[0] - last_number
 
     return last_number
 
@@ -73,7 +85,7 @@ def start(intput: str) -> int:
 
 def main():
     print("first... ")
-    assert 114 == start(
+    assert 2 == start(
         """0 3 6 9 12 15
 1 3 6 10 15 21
 10 13 16 21 30 45"""
@@ -83,7 +95,7 @@ def main():
     print("second... ")
     text = input_data_file.read_text()
     print(start(text))
-    # print("expected: 19241")
+    print("expected: 975")
 
 
 if __name__ == "__main__":
